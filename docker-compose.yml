@@ -1,0 +1,61 @@
+# Arduino Monitor - Docker Compose
+# Coolify otomatik olarak bunu kullanır (opsiyonel)
+# Lokal test için: docker-compose up -d
+
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: arduino-monitor-app
+    ports:
+      - "8080:80"
+    environment:
+      # Coolify bu değişkenleri otomatik enjekte eder
+      DB_HOST: mysql
+      DB_NAME: arduino_monitor
+      DB_USER: root
+      DB_PASS: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - mysql
+    networks:
+      - arduino-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: arduino-monitor-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-secret}
+      MYSQL_DATABASE: arduino_monitor
+      MYSQL_USER: ${MYSQL_USER:-arduino}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-arduino123}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database.sql:/docker-entrypoint-initdb.d/database.sql
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - arduino-network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: arduino-monitor-phpmyadmin
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-secret}
+    depends_on:
+      - mysql
+    networks:
+      - arduino-network
+
+networks:
+  arduino-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
