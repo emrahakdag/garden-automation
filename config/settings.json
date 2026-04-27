@@ -1,0 +1,71 @@
+{
+    "system": {
+        "name": "Garden-OS",
+        "version": "0.1.0",
+        "language": "tr"
+    },
+    "network": {
+        "update_interval": 60,
+        "api_timeout": 10,
+        "max_retries": 3
+    },
+    "security": {
+        "motor_password": "guclu_bir_sifre",
+        "api_secret_key": "degistirilmeli_2026",
+        "allow_cors": true
+    },
+    "modules": {
+        "motor_control": {
+            "enabled": true,
+            "relay_pin": "D5",
+            "min_interval": 10,
+            "default_run_duration": 300,
+            "max_run_duration": 3600
+        },
+        "valve_control": {
+            "enabled": true,
+            "relay_pin": "D6"
+        }
+    },
+    "nodes": [
+        {
+            "id": "node_01",
+            "type": "DHT22",
+            "location": "Sera",
+            "metrics": ["temperature", "humidity"],
+            "alert_thresholds": {
+                "temperature": {"min": 5, "max": 40},
+                "humidity": {"min": 30, "max": 85}
+            }
+        },
+        {
+            "id": "node_02",
+            "type": "HC-SR04",
+            "location": "Su Deposu",
+            "metrics": ["water_level"],
+            "tank_params": {
+                "max_height_cm": 150,
+                "min_safe_level_cm": 30,
+                "critical_level_cm": 15
+            },
+            "alert_thresholds": {
+                "water_level": {"min": 15, "max": 150}
+            }
+        },
+        {
+            "id": "node_03",
+            "type": "DHT22_HCSR04",
+            "location": "Bahçe",
+            "metrics": ["temperature", "humidity", "soil_moisture"],
+            "alert_thresholds": {
+                "temperature": {"min": 0, "max": 45},
+                "humidity": {"min": 20, "max": 90}
+            }
+        }
+    ],
+    "notifications": {
+        "email_enabled": false,
+        "webhook_enabled": false,
+        "webhook_url": ""
+    }
+}
