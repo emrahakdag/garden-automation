@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="tr"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sayam - Son Dakika Haberler</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;min-height:100vh}
+header{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);padding:2rem;text-align:center;border-bottom:3px solid #e94560}
+h1{font-size:2.5rem;color:#fff;margin-bottom:.5rem}
+.meta{font-size:.9rem;color:#888;margin-bottom:.5rem}
+.rate-ticker{display:flex;justify-content:center;gap:1.5rem;margin-top:1rem;flex-wrap:wrap}
+.rate{background:rgba(233,69,96,.15);border:1px solid rgba(233,69,96,.3);border-radius:8px;padding:.4rem 1rem;font-size:.95rem}
+.rate b{color:#4ecca3}
+.container{max-width:900px;margin:0 auto;padding:1.5rem}
+.search{display:flex;gap:.75rem;margin-bottom:1.5rem}
+.search input{flex:1;padding:.75rem 1rem;border:1px solid #333;border-radius:8px;background:#1a1a2e;color:#fff;font-size:1rem}
+.search input:focus{outline:none;border-color:#e94560}
+.search button{padding:.75rem 1.5rem;background:#e94560;color:#fff;border:none;border-radius:8px;font-size:1rem;cursor:pointer;font-weight:600}
+.search button:hover{background:#c73650}
+.grid{display:grid;gap:.75rem}
+.card{background:#16213e;border:1px solid #1a1a3e;border-radius:12px;padding:1rem 1.25rem;display:flex;align-items:flex-start;gap:1rem;text-decoration:none;color:inherit;transition:border-color .2s,transform .15s}
+.card:hover{border-color:#e94560;transform:translateY(-2px)}
+.num{min-width:36px;height:36px;background:#e94560;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;flex-shrink:0}
+.card-body{flex:1}
+.card-title{font-size:1.05rem;line-height:1.45;margin-bottom:.25rem}
+.card-url{font-size:.78rem;color:#557}
+footer{text-align:center;padding:2rem;color:#444;font-size:.8rem}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#0f3460;color:#fff;padding:.75rem 1.25rem;border-radius:8px;font-size:.9rem;display:none}
+.toast.show{display:block}
+.spinner{text-align:center;padding:3rem;font-size:1.2rem;color:#888}
+.spinner::before{content:"⏳　";display:block;font-size:2rem;margin-bottom:.5rem}
+@media(max-width:600px){h1{font-size:1.8rem}.container{padding:1rem}.rate{font-size:.8rem;padding:.3rem .6rem}}
+</style></head><body>
+<header>
+<h1>🗞️ <span>Sa</span><span>ya</span><span>m</span></h1>
+<div class="meta">Firecrawl ile canlı haber · <span id="clock"></span></div>
+<div class="rate-ticker">
+<div class="rate" id="r-dolar">Dolar --</div>
+<div class="rate" id="r-euro">Euro --</div>
+<div class="rate" id="r-sterlin">Sterlin --</div>
+<div class="rate" id="r-bitcoin">Bitcoin --</div>
+<div class="rate" id="r-altin">Gram Altın --</div>
+</div>
+</header>
+<div class="container">
+<div class="search">
+<input id="urlInput" placeholder="https://www.hurriyet.com.tr" value="https://www.sozcu.com.tr">
+<button onclick="go()">Çek</button>
+</div>
+<div id="content"><div class="spinner">Haberler yükleniyor…</div></div>
+</div>
+<footer>Sayam · Firecrawl + Coolify · <span id="ts"></span></footer>
+<div class="toast" id="toast"></div>
+<script>
+const K='fc-756fd9b27b2940c38ecf27f264729b48',U='https://api.firecrawl.dev/v0/scrape';
+function clock(){const d=new Date();document.getElementById('clock').textContent=d.toLocaleDateString('tr-TR',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' '+d.toLocaleTimeString('tr-TR')}
+clock();setInterval(clock,1000);
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+async function go(){
+const url=document.getElementById('urlInput').value||'https://www.sozcu.com.tr';
+document.getElementById('content').innerHTML='<div class="spinner">Haberler yükleniyor…</div>';
+try{
+const r=await fetch(U,{method:'POST',headers:{'Authorization':'Bearer '+K,'Content-Type':'application/json'},body:JSON.stringify({url:url,onlyMainContent:true,formats:['markdown']})});
+if(!r.ok)throw new Error('HTTP '+r.status);
+const j=await r.json();
+if(!j.success)throw new Error(j.error||'Firecrawl hatası');
+show(j.data);
+}catch(e){document.getElementById('content').innerHTML='<div class="spinner" style="color:#e94560">❌ '+e.message+'</div>';toast(e.message)}
+}
+function show(d){
+const m=d.markdown||'',rates={};
+for(const l of m.split('\n')){const p=l.match(/(DOLAR|EURO|STERLIN|BITCOIN|ALTIN)\s*([\d.,]+)/i);if(p)rates[p[1].toLowerCase()]=p[2]}
+document.getElementById('r-dolar').innerHTML='Dolar <b>'+rates.dolar||'--'+'</b>';
+document.getElementById('r-euro').innerHTML='Euro <b>'+rates.euro||'--'+'</b>';
+document.getElementById('r-sterlin').innerHTML='Sterlin <b>'+rates.sterlin||'--'+'</b>';
+document.getElementById('r-bitcoin').innerHTML='Bitcoin <b>'+rates.bitcoin||'--'+'</b>';
+document.getElementById('r-altin').innerHTML='Gram Altın <b>'+rates.altin||'--'+'</b>';
+document.getElementById('ts').textContent=new Date().toLocaleTimeString('tr-TR');
+const re=/\[!\[([^\]]+)\]\([^)]+\)\]\(([^)]+)\)/g,b=['son dakika','giriş yap','abone ol','sosyal medya','yazarlar','günün içinden','gündem','hayat','ekonomi','spor','dünya','magazin','finans','teknoloji','otomotiv','resmi ilanlar','e-gazete','dolar','euro','sterlin','bitcoin','altın','faiz'];
+const h=[];let x;while((x=re.exec(m))!==null){const t=x[1].trim(),l=x[2];if(t.length>5&&l.length>10){const z=t.toLowerCase().replace(/ç/g,'c').replace(/ğ/g,'g').replace(/İ/g,'i').replace(/ö/g,'o').replace(/ş/g,'s').replace(/ü/g,'u');if(!b.some(b=>z.includes(b)))h.push({title:t,url:l})}}
+if(!h.length){document.getElementById('content').innerHTML='<div class="spinner">Bu siteden başlık çekilemedi. Başka bir site deneyin.</div>';return}
+let s='<div class="grid">';
+h.slice(0,38).forEach((it,i)=>{s+='<a class="card" href="'+it.url+'" target="_blank" rel="noopener"><div class="num">'+(i+1)+'</div><div class="card-body"><div class="card-title">'+it.title+'</div><div class="card-url">'+it.url.replace('https://','')+'</div></div></a>'});
+s+='</div>';document.getElementById('content').innerHTML=s;
+}
+go();setInterval(go,300000);
+</script></body></html>
