@@ -1,0 +1,8 @@
+# Apache .htaccess – URL rewrite kuralları
+RewriteEngine On
+
+# API yönlendirmeleri
+RewriteRule ^api/sensor$ src/api/sensor.php [L,QSA]
+RewriteRule ^api/motor$ src/api/motor.php [L,QSA]
+RewriteRule ^api/motor/status src/api/motor.php?action=status [L,QSA]
+RewriteRule ^api/motor/start src/api/motor.php?action=start [L,QSA]

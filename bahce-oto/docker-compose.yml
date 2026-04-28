@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  # PHP / Apache Web Uygulaması
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./.env:/var/www/html/.env:ro
+      - ./config.yaml:/var/www/html/config.yaml:ro
+    environment:
+      - DB_HOST=db
+      - DB_NAME=bahce_oto
+      - DB_USER=bahce_user
+      - DB_PASS=${DB_PASS}
+      - MOTOR_PASSWORD=${MOTOR_PASSWORD}
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  # MySQL Veritabanı
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ROOT_DB_PASS:-degis_sifre_root}
+      MYSQL_DATABASE: bahce_oto
+      MYSQL_USER: bahce_user
+      MYSQL_PASSWORD: ${DB_PASS:-degis_sifre_kullan}
+    volumes:
+      - bahce_db_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+
+volumes:
+  bahce_db_data:

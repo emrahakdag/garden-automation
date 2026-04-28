@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kuyu Motoru – Kontrol Paneli</title>
+  <style>
+    * {box-sizing: border-box; margin: 0; padding: 0;}
+    body {font-family: Arial, sans-serif; background:#f0f8ff; min-height:100vh; display:flex; align-items:center; justify-content:center;}
+    .panel {background:#fff; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,.1); padding:2.5rem; max-width:420px; width:100%;}
+    h2 {color:#2c7; margin-bottom:1.5rem; text-align:center;}
+    label {display:block; font-weight:bold; margin-bottom:.4rem; color:#333;}
+    input[type="password"] {width:100%; padding:.6rem; border:1px solid #ccc; border-radius:6px; font-size:1rem; margin-bottom:1rem;}
+    button {width:100%; padding:.75rem; background:#2c7; color:#fff; border:none; border-radius:6px; font-size:1.1rem; cursor:pointer; transition:background .2s;}
+    button:hover {background:#29a169;}
+    button:disabled {background:#aaa; cursor:not-allowed;}
+    pre#result {margin-top:1rem; padding:.75rem; background:#f9f9f9; border-radius:6px; font-size:.9rem; min-height:2rem; color:#555; white-space:pre-wrap; word-break:break-word;}
+    .status {text-align:center; margin-top:.5rem; font-size:.85rem; color:#888;}
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h2>Kuyu Motorunu Çalıştır</h2>
+    <form id="motorForm">
+      <label for="password">Şifre</label>
+      <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Motor kontrol şifresi" />
+      <button type="submit" id="btn">Başlat</button>
+    </form>
+    <pre id="result"></pre>
+    <div class="status">Son duruma <a href="/api/sensor/status">/api/sensor/status</a> adresinden bakabilirsiniz.</div>
+  </div>
+
+  <script>
+    const form    = document.getElementById('motorForm');
+    const result  = document.getElementById('result');
+    const btn     = document.getElementById('btn');
+    let timer     = null;
+
+    // Son durumu göster
+    (function showStatus() {
+      fetch('/api/motor/status')
+        .then(r => r.json())
+        .then(d => { result.textContent = d.status !== 'ok' ? d.error : 'Motor: ' + (d.current || 'bilinmiyor'); })
+        .catch(() => {});
+    })();
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      btn.disabled    = true;
+      result.textContent = 'İstek gönderiliyor…';
+
+      try {
+        const resp = await fetch('/api/motor', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({password: document.getElementById('password').value})
+        });
+        const txt = await resp.text();
+        result.textContent = txt;
+
+        // 5 saniye sonra tekrar durumu çek
+        setTimeout(() => window.location.reload(), 5000);
+      } catch (err) {
+        result.textContent = 'Hata: ' + err.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+# Bahçe Otomasyon Konfigürasyonu
+
+# Veri toplama periyodu (saniye)
+poll_interval: 30
+
+# Motor kontrol şifresi (HTTPS endpoint üzerinden doğrulanır)
+# Üretim ortamında şifreyi environment variable (MOTOR_PASSWORD) kullanın!
+motor_control:
+  password: "GUVENLISIFRE123"
+  endpoint: "/api/motor/start"
+
+# Sensör tanımları
+devices:
+  - id: "arduino_nano_01"
+    type: "dht22"
+    pins:
+      data: 2
+  - id: "nodemcu_esp8266_01"
+    type: "dht22"
+    pins:
+      data: D4
+  - id: "raspberry_pi"
+    type: "ultrasonic"
+    pins:
+      trig: 23
+      echo: 24
+
+# Depo doluluk oranı sensörü
+water_tank:
+  sensor_pin: A0
+  capacity_liters: 200
